@@ -21,6 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "user_main.hpp"
 
 /* USER CODE END Includes */
 
@@ -85,7 +86,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
-
+  user_main();
   /* USER CODE END 2 */
 
   /* Infinite loop */
