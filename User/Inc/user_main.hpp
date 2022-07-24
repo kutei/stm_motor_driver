@@ -13,6 +13,7 @@ extern "C" {
 #endif
 
 void user_main(void);
+void USER_USART2_IRQHandler(void);
 
 #ifdef __cplusplus
 }
