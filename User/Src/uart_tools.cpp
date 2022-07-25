@@ -4,9 +4,9 @@
  *  Created on: Jun 4, 2022
  *      Author: yumas
  */
-#include "uart_comm.hpp"
 #include <stdarg.h>
 #include <stdio.h>
+#include <uart_tools.hpp>
 
 
 UartComm::UartComm(UART_HandleTypeDef *huart)
@@ -78,8 +78,13 @@ void UartComm::handle_irq(void){
   /* UART received data is enabled */
   if (((isrflags & USART_SR_RXNE) != RESET) && ((cr1its & USART_CR1_RXNEIE) != RESET)) {
     uint16_t rx_data = get_dr();
-    if (this->cb != nullptr) this->cb(rx_data, 1, errorflags);
+    this->callback(rx_data, 1, errorflags);
   }
 
   return;
+}
+
+
+void QueuedUart::callback(uint16_t data, size_t len, uint32_t error_flag){
+  this->queue.push(data);
 }

@@ -8,7 +8,7 @@
 #ifndef INC_GLOBAL_VARIABLES_H_
 #define INC_GLOBAL_VARIABLES_H_
 
-#include "uart_comm.hpp"
+#include <uart_tools.hpp>
 
 extern UartComm *g_uart_comm;
 

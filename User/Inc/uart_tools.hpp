@@ -5,10 +5,11 @@
  *      Author: yumas
  */
 
-#ifndef INC_UART_COMM_HPP_
-#define INC_UART_COMM_HPP_
+#ifndef INC_UART_TOOLS_HPP_
+#define INC_UART_TOOLS_HPP_
 
 #include "stm32f1xx.h"
+#include <queue>
 
 #ifdef __cplusplus
 extern "C" {
@@ -99,10 +100,39 @@ private:
    */
   inline uint16_t get_dr(void){ return (uint16_t)(huart->Instance->DR & (uint32_t)0x00FF); }
 
+  /**
+   * @brief 受信コールバック関数
+   *
+   * @param[in] data 受信データ
+   * @param[in] len 受信長
+   * @param[in] error_flag エラーフラグ
+   * @retval None
+   */
+  virtual void callback(uint16_t data, size_t len, uint32_t error_flag) = 0;
+};
+
+
+class QueuedUart : public UartComm{
+public:
+  std::queue<uint16_t> queue;
+
+  QueuedUart(UART_HandleTypeDef *huart) : UartComm(huart) { ; }
+
+private:
+
+  /**
+   * @brief 受信コールバック関数
+   *
+   * @param[in] data 受信データ
+   * @param[in] len 受信長
+   * @param[in] error_flag エラーフラグ
+   * @retval None
+   */
+  void callback(uint16_t data, size_t len, uint32_t error_flag);
 };
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* INC_UART_COMM_HPP_ */
+#endif /* INC_UART_TOOLS_HPP_ */
