@@ -7,4 +7,5 @@
 
 #include "global_variables.h"
 
+bool g_kill_signal = false;
 UartComm *g_uart_comm;

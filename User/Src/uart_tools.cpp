@@ -4,9 +4,12 @@
  *  Created on: Jun 4, 2022
  *      Author: yumas
  */
+
+#include "global_variables.h"
+#include "uart_tools.hpp"
+
 #include <stdarg.h>
 #include <stdio.h>
-#include <uart_tools.hpp>
 
 
 UartComm::UartComm(UART_HandleTypeDef *huart)
@@ -38,6 +41,8 @@ void UartComm::transmit(const char *data)
     for (; *(data + cnt); cnt++) { ; }
     transmit((uint8_t *)data, cnt);
 }
+
+void UartComm::transmit_linesep() { this->transmit("\n\r"); }
 
 void UartComm::printf(const char *format, ...)
 {
@@ -86,5 +91,66 @@ void UartComm::handle_irq(void){
 
 
 void QueuedUart::callback(uint16_t data, size_t len, uint32_t error_flag){
-  this->queue.push(data);
+  this->queue.emplace_back(data);
+}
+
+
+void CmdlineUart::callback(uint16_t data, size_t len, uint32_t error_flag){
+  if(data == 3){
+    this->transmit("^C");
+    g_kill_signal = true;
+  }else if(data == 8){
+    if(this->is_echo && this->queue.size() > 0){
+      this->queue.pop_back();
+      this->transmit(8);
+      this->transmit(' ');
+      this->transmit(8);
+    }
+  }else{
+    uint8_t data_uint8 = static_cast<uint8_t>(data);
+    this->queue.emplace_back(data_uint8);
+    if(this->is_echo) {
+      this->transmit(data_uint8);
+      if(data_uint8 == '\r') this->transmit("\n");
+    }
+  }
+}
+
+void CmdlineUart::clear_queue(void){
+  this->queue.clear();
+}
+
+bool CmdlineUart::is_execute_requested(void){
+  size_t queue_size = this->queue.size();
+  for(size_t i = 0; i < queue_size; i++){
+    if(this->queue[i] == '\r') return true;
+  }
+  return false;
+}
+
+void CmdlineUart::get_commands(args_t *args){
+  for(size_t i = 0; i < ARGS_NUM; i++){
+    for(size_t j = 0; j < ARG_LENGTH; j++){
+      args->at(i)[j] = 0;
+    }
+  }
+
+  size_t n_args = 0;
+  size_t n_chars = 0;
+  while(true){
+    uint8_t data = this->queue.front();
+    this->queue.pop_front();
+    if(data == '\r'){ break; }
+
+    if(n_chars > 0 && data == ' '){
+      n_chars = 0;
+      n_args++;
+    }
+    if('!' <= data && data <= '~'){
+      if(n_args < ARGS_NUM && n_chars < (ARG_LENGTH-1)){
+        args->at(n_args)[n_chars] = data;
+      }
+      n_chars++;
+    }
+  }
 }

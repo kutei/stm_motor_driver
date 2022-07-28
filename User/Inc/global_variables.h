@@ -10,6 +10,7 @@
 
 #include <uart_tools.hpp>
 
+extern bool g_kill_signal;
 extern UartComm *g_uart_comm;
 
 

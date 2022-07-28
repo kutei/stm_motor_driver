@@ -8,6 +8,7 @@
 #ifndef INC_UART_TOOLS_HPP_
 #define INC_UART_TOOLS_HPP_
 
+#include "constants.hpp"
 #include "stm32f1xx.h"
 #include <queue>
 
@@ -63,6 +64,13 @@ public:
   void transmit(const char *data);
 
   /**
+   * @brief 改行コードを送信
+   *
+   * @retval None
+   */
+  void transmit_linesep();
+
+  /**
    * @brief フォーマット文字列を送信
    *
    * @param[in] format 送信するformat指定子を含む文字列
@@ -114,11 +122,35 @@ private:
 
 class QueuedUart : public UartComm{
 public:
-  std::queue<uint16_t> queue;
+  std::deque<uint16_t> queue;
 
   QueuedUart(UART_HandleTypeDef *huart) : UartComm(huart) { ; }
 
 private:
+
+  /**
+   * @brief 受信コールバック関数
+   *
+   * @param[in] data 受信データ
+   * @param[in] len 受信長
+   * @param[in] error_flag エラーフラグ
+   * @retval None
+   */
+  void callback(uint16_t data, size_t len, uint32_t error_flag);
+};
+
+
+class CmdlineUart : public QueuedUart{
+public:
+  CmdlineUart(UART_HandleTypeDef *huart) : QueuedUart(huart) { ; }
+  void enable_echo(void) { is_echo = true; }
+  void disable_echo(void) { is_echo = false; }
+  void clear_queue(void);
+  bool is_execute_requested(void);
+  void get_commands(args_t *args);
+
+private:
+  bool is_echo = true;
 
   /**
    * @brief 受信コールバック関数
