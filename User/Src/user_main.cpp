@@ -11,8 +11,6 @@
 #include "global_variables.h"
 
 
-extern UART_HandleTypeDef huart2;
-
 void user_main(void){
   args_t args;
   CmdlineUart cmdline_uart(&huart2);
@@ -25,8 +23,6 @@ void user_main(void){
   while(1){
     if(cmdline_uart.is_execute_requested()){
       HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14|GPIO_PIN_15, GPIO_PIN_SET);
-      cmdline_uart.transmit("requested");
-      cmdline_uart.transmit_linesep();
       cmdline_uart.get_commands(&args);
       cmdline_uart.printf("args 0: [%s]\n\r", args[0].data());
       cmdline_uart.printf("args 1: [%s]\n\r", args[1].data());
@@ -47,8 +43,4 @@ void user_main(void){
       cmdline_uart.clear_queue();
     }
   }
-}
-
-void USER_USART2_IRQHandler(void){
-  g_uart_comm->handle_irq();
 }
