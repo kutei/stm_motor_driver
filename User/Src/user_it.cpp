@@ -9,5 +9,5 @@
 #include "global_variables.h"
 
 void USER_USART2_IRQHandler(void){
-  g_uart_comm->handle_irq();
+    g_uart_comm->handle_irq();
 }
