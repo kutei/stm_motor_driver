@@ -9,6 +9,9 @@
 #include "user_main.hpp"
 #include "constants.hpp"
 #include "global_variables.h"
+#include <string.h>
+#include <map>
+
 
 static CmdlineUart *fg_cmdlin_uart;
 
@@ -27,7 +30,7 @@ void args_to_argv(char** argv, args_t* args){
  * コマンド実行関数郡
  ****************************************/
 void print_cmdline_args(int argc, char** argv){
-    for(int i = 0; i <= argc; i++){
+    for(int i = 0; i < argc; i++){
         fg_cmdlin_uart->printf("args %d: [%s]", i, argv[i]);
         fg_cmdlin_uart->transmit_linesep();
     }
@@ -38,6 +41,11 @@ void print_cmdline_args(int argc, char** argv){
  * メイン関数
  ****************************************/
 void user_main(void){
+    typedef void (*cmd_func_t)(int, char**);
+    std::map<const char *, cmd_func_t> cmd_list{
+        {"echo", print_cmdline_args}
+    };
+
     CmdlineUart cmdline_uart(&huart2);
     args_t args = {0};
     char** argv = std::array<char *, ARGS_NUM>().data();
@@ -58,10 +66,16 @@ void user_main(void){
             int argc = cmdline_uart.get_commands(&args);
 
             if(argc > 0){
-                print_cmdline_args(argc, argv);
-                cmdline_uart.transmit("----\n\r");
-                for(int i = 0; i < 10; i++){
-                    cmdline_uart.printf("args %d: [%s]\n\r", i, argv[i]);
+                bool executed = false;
+                for(auto it = cmd_list.cbegin(); it != cmd_list.cend() ; it++){
+                    if(strcmp(argv[0], it->first) == 0){
+                        it->second(argc, argv);
+                        executed = true;
+                        break;
+                    }
+                }
+                if(executed == false){
+                    cmdline_uart.printf("error: unknown cmd for %s\n\r", argv[0]);
                 }
             }
             cmdline_uart.transmit("$ ");

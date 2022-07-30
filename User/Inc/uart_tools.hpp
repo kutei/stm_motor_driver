@@ -19,7 +19,6 @@ extern "C" {
 class UartComm{
 public:
     static constexpr int TIMEOUT_TRANSMIT = 10;
-    typedef void (*uart_callback_t)(uint16_t, size_t, uint32_t);
 
     UartComm(UART_HandleTypeDef *huart);
 
@@ -97,7 +96,6 @@ public:
 
 private:
     UART_HandleTypeDef* huart;
-    uart_callback_t     cb = nullptr;
 
     /**
      * @brief USART_DRから1Byte(8,9bits)のデータを取得する。

@@ -149,7 +149,9 @@ int CmdlineUart::get_commands(args_t *args){
         this->queue.pop_front();
 
         if(data == '\r'){
-            if(n_args > ARGS_NUM){ return ARGS_NUM-1; }
+            if(n_args == 0 && n_chars == 0) return 0;
+            if(n_args >= ARGS_NUM) return ARGS_NUM;
+            if(n_chars > 0) return n_args + 1;
             return n_args;
         }
 
