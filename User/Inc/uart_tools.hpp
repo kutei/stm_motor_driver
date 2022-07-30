@@ -147,7 +147,7 @@ public:
   void disable_echo(void) { is_echo = false; }
   void clear_queue(void);
   bool is_execute_requested(void);
-  void get_commands(args_t *args);
+  int get_commands(args_t *args);
 
 private:
   bool is_echo = true;

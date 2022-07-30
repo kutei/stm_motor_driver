@@ -106,8 +106,15 @@ void CmdlineUart::callback(uint16_t data, size_t len, uint32_t error_flag){
       this->transmit(' ');
       this->transmit(8);
     }
-  }else{
+  }else if((' ' <= data && data <= '~') || data == '\r'){
     uint8_t data_uint8 = static_cast<uint8_t>(data);
+    this->queue.emplace_back(data_uint8);
+    if(this->is_echo) {
+      this->transmit(data_uint8);
+      if(data_uint8 == '\r') this->transmit("\n");
+    }
+  }else if(data == '\e'){
+    uint8_t data_uint8 = '^';
     this->queue.emplace_back(data_uint8);
     if(this->is_echo) {
       this->transmit(data_uint8);
@@ -128,10 +135,10 @@ bool CmdlineUart::is_execute_requested(void){
   return false;
 }
 
-void CmdlineUart::get_commands(args_t *args){
+int CmdlineUart::get_commands(args_t *args){
   for(size_t i = 0; i < ARGS_NUM; i++){
     for(size_t j = 0; j < ARG_LENGTH; j++){
-      args->at(i)[j] = 0;
+      (*args)[i][j] = 0;
     }
   }
 
@@ -140,7 +147,10 @@ void CmdlineUart::get_commands(args_t *args){
   while(true){
     uint8_t data = this->queue.front();
     this->queue.pop_front();
-    if(data == '\r'){ break; }
+    if(data == '\r'){
+      if(n_args > ARGS_NUM){ return ARGS_NUM-1; }
+      return n_args;
+    }
 
     if(n_chars > 0 && data == ' '){
       n_chars = 0;
@@ -148,7 +158,7 @@ void CmdlineUart::get_commands(args_t *args){
     }
     if('!' <= data && data <= '~'){
       if(n_args < ARGS_NUM && n_chars < (ARG_LENGTH-1)){
-        args->at(n_args)[n_chars] = data;
+        (*args)[n_args][n_chars] = data;
       }
       n_chars++;
     }
