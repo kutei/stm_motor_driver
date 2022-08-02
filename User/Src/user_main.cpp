@@ -124,7 +124,7 @@ void user_main(void){
     typedef void (*cmd_func_t)(int, char**);
     std::map<const char *, cmd_func_t> cmd_list{
         {"echo", cmd_print_cmdline_args},
-        {"triangle", cmd_triangle},
+        {"o_tri", cmd_triangle},
         {"enc", cmd_display_encoder}
     };
 
