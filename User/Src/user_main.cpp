@@ -6,6 +6,7 @@
  */
 
 #include "uart_tools.hpp"
+#include "gpo_tools.hpp"
 #include "user_main.hpp"
 #include "constants.hpp"
 #include "global_variables.h"
@@ -41,14 +42,16 @@ void print_cmdline_args(int argc, char** argv){
  * メイン関数
  ****************************************/
 void user_main(void){
+    args_t args = {0};
+    char** argv = std::array<char *, ARGS_NUM>().data();
+
     typedef void (*cmd_func_t)(int, char**);
     std::map<const char *, cmd_func_t> cmd_list{
         {"echo", print_cmdline_args}
     };
 
     CmdlineUart cmdline_uart(&huart2);
-    args_t args = {0};
-    char** argv = std::array<char *, ARGS_NUM>().data();
+    DoubleControlledPwm pwm_output(&htim3, false);
 
     g_uart_comm = &cmdline_uart;
     fg_cmdlin_uart = &cmdline_uart;
@@ -60,6 +63,12 @@ void user_main(void){
     cmdline_uart.transmit("########################################\n\r");
     cmdline_uart.transmit("$ ");
     cmdline_uart.enable_it();
+
+    led_red_set();
+    led_blue_set();
+
+    pwm_output.start();
+    pwm_output.set(3000);
 
     while(1){
         if(cmdline_uart.is_execute_requested()){
