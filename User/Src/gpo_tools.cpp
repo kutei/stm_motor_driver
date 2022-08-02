@@ -28,7 +28,6 @@ DoubleControlledPwm::DoubleControlledPwm(TIM_HandleTypeDef *tim, bool reverse){
     this->_tim = tim;
     this->_direction = reverse;
 }
-    constexpr static int32_t MAX_PERIOD = 65207;
 
 void DoubleControlledPwm::start(void){
     HAL_TIM_PWM_Start(this->_tim, TIM_CHANNEL_1);
@@ -36,6 +35,19 @@ void DoubleControlledPwm::start(void){
 }
 
 void DoubleControlledPwm::set(int32_t out){
-    this->_tim->Instance->CCR1 = out;
-    this->_tim->Instance->CCR2 = out;
+    int32_t abs = out;
+    if(abs < 0){ abs *= -1; }
+    if(abs > this->MAX_PERIOD){ abs = this->MAX_PERIOD; }
+
+    if(this->_direction){ out *= -1; }
+    if(out == 0){
+        this->_tim->Instance->CCR1 = 0;
+        this->_tim->Instance->CCR2 = 0;
+    }else if(out > 0){
+        this->_tim->Instance->CCR1 = 0;
+        this->_tim->Instance->CCR2 = abs;
+    }else{
+        this->_tim->Instance->CCR1 = abs;
+        this->_tim->Instance->CCR2 = 0;
+    }
 }

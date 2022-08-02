@@ -9,3 +9,4 @@
 
 bool g_kill_signal = false;
 UartComm *g_uart_comm;
+DoubleControlledPwm *g_pwm_output;

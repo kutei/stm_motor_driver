@@ -29,6 +29,7 @@
         "xmemory": "cpp",
         "xstddef": "cpp",
         "xtr1common": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "xtree": "cpp"
     }
 }

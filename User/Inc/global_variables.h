@@ -10,6 +10,7 @@
 
 #include "stm32f1xx.h"
 #include "uart_tools.hpp"
+#include "gpo_tools.hpp"
 
 
 // CubeMX defined variables
@@ -20,6 +21,7 @@ extern UART_HandleTypeDef huart2;
 // user defined variables
 extern bool g_kill_signal;
 extern UartComm *g_uart_comm;
+extern DoubleControlledPwm *g_pwm_output;
 
 
 #endif /* INC_GLOBAL_VARIABLES_H_ */
