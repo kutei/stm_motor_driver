@@ -21,6 +21,9 @@ void led_red_set(void);
 void led_blue_reset(void);
 void led_blue_set(void);
 
+void pwm_output_enable(void);
+void pwm_output_disable(void);
+
 class DoubleControlledPwm{
 public:
     // PWM最大値の99.5%を上限とする。

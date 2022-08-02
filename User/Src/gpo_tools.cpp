@@ -23,6 +23,13 @@ void led_blue_set(void){
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_15, GPIO_PIN_SET);
 }
 
+void pwm_output_enable(void){
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+}
+void pwm_output_disable(void){
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+}
+
 
 DoubleControlledPwm::DoubleControlledPwm(TIM_HandleTypeDef *tim, bool reverse){
     this->_tim = tim;

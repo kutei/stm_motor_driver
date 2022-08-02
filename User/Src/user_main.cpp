@@ -80,9 +80,19 @@ void cmd_triangle(int argc, char** argv){
     }
     int max = atoi(argv[1]);
 
-    rotation_triangle(max);
-    g_kill_signal = false;
+    led_red_reset();
+    led_blue_set();
     g_pwm_output->set(0);
+    pwm_output_enable();
+
+    rotation_triangle(max);
+
+    pwm_output_disable();
+    g_pwm_output->set(0);
+    led_red_set();
+    led_blue_reset();
+
+    g_kill_signal = false;
 }
 
 
@@ -115,8 +125,9 @@ void user_main(void){
     cmdline_uart.enable_it();
 
     led_red_set();
-    led_blue_set();
+    led_blue_reset();
 
+    pwm_output_disable();
     pwm_output.start();
     pwm_output.set(0);
 
