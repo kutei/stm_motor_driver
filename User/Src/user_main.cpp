@@ -7,6 +7,7 @@
 
 #include "uart_tools.hpp"
 #include "gpo_tools.hpp"
+#include "tim1_encoder.hpp"
 #include "user_main.hpp"
 #include "constants.hpp"
 #include "global_variables.h"
@@ -95,6 +96,23 @@ void cmd_triangle(int argc, char** argv){
     g_kill_signal = false;
 }
 
+void cmd_display_encoder(int argc, char** argv){
+    while(1){
+        if(g_kill_signal){
+            g_kill_signal = false;
+            return;
+        }
+
+        g_tim1_encoder->update();
+        fg_cmdlin_uart->printf(
+            "deg:%d, CNT:%d, spd:%d",
+            g_tim1_encoder->get_current(), TIM1->CNT, g_tim1_encoder->get_speed());
+        fg_cmdlin_uart->transmit_linesep();
+        HAL_Delay(100);
+    }
+
+}
+
 
 /****************************************
  * メイン関数
@@ -106,15 +124,18 @@ void user_main(void){
     typedef void (*cmd_func_t)(int, char**);
     std::map<const char *, cmd_func_t> cmd_list{
         {"echo", cmd_print_cmdline_args},
-        {"triangle", cmd_triangle}
+        {"triangle", cmd_triangle},
+        {"enc", cmd_display_encoder}
     };
 
     CmdlineUart cmdline_uart(&huart2);
     DoubleControlledPwm pwm_output(&htim3, false);
+    Tim1Encoder tim1_encoder(&htim1);
 
     g_uart_comm = &cmdline_uart;
     fg_cmdlin_uart = &cmdline_uart;
     g_pwm_output = &pwm_output;
+    g_tim1_encoder = &tim1_encoder;
     args_to_argv(argv, &args);
 
     cmdline_uart.transmit("\e[5B\e[2J\e[0;0H");  // 5行下、画面全クリア、カーソル位置(0,0)
@@ -127,6 +148,7 @@ void user_main(void){
     led_red_set();
     led_blue_reset();
 
+    g_tim1_encoder->start();
     pwm_output_disable();
     pwm_output.start();
     pwm_output.set(0);
