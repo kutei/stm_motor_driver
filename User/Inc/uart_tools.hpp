@@ -85,7 +85,7 @@ public:
      * @retval 1以上 受信できるデータが存在し、引数dataに値が設定されたが、受信時にエラーが発生した。
      * @retval -1 受信できるデータが存在しない。
      */
-    int receive(uint8_t *data);
+    int receive(uint16_t *data);
 
     /**
      * @brief 割り込み要求ハンドラを処理する。
@@ -103,7 +103,7 @@ private:
      * @note 各種レジスタの値を参照し、USART_DRからデータ取得可能なことを確認してから呼び出すこと。
      * @retval None
      */
-    inline uint16_t get_dr(void){ return (uint16_t)(huart->Instance->DR & (uint32_t)0x00FF); }
+    inline uint16_t get_dr(void){ return (uint16_t)(huart->Instance->DR & (uint32_t)0x01FF); }
 
     /**
      * @brief 受信コールバック関数

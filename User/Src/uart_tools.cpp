@@ -56,7 +56,7 @@ void UartComm::printf(const char *format, ...)
     va_end(list);
 }
 
-int UartComm::receive(uint8_t *data)
+int UartComm::receive(uint16_t *data)
 {
     uint32_t isrflags = READ_REG(this->huart->Instance->SR);
     uint32_t errorflags = (isrflags & (uint32_t)(USART_SR_PE | USART_SR_FE | USART_SR_ORE | USART_SR_NE));
@@ -64,7 +64,7 @@ int UartComm::receive(uint8_t *data)
     if((isrflags & USART_SR_RXNE) == RESET){
         return -1;
     }else{
-        *data = (uint8_t)get_dr();
+        *data = get_dr();
         return errorflags;
     }
 }
