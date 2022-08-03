@@ -113,6 +113,34 @@ void cmd_display_encoder(int argc, char** argv){
 
 }
 
+void cmd_display_sbus(int argc, char** argv){
+    while(1){
+        if(g_kill_signal){
+            g_kill_signal = false;
+            return;
+        }
+
+        fg_cmdlin_uart->printf("1:%5d, 2:%5d, 3:%5d, 4:%5d, 5:%5d, 6:%5d, err:%4d, ErrRate:%4d",
+                g_sbus_uart->get_channel(1),
+                g_sbus_uart->get_channel(2),
+                g_sbus_uart->get_channel(3),
+                g_sbus_uart->get_channel(4),
+                g_sbus_uart->get_channel(5),
+                g_sbus_uart->get_channel(6),
+                g_sbus_uart->get_decoder_err(),
+                g_sbus_uart->get_error_rate()
+        );
+        if(g_sbus_uart->get_fail_safe() == SbusUart::FAILSAFE_ACTIVE){
+            fg_cmdlin_uart->transmit(", FS:ACTIVE");
+        }else{
+            fg_cmdlin_uart->transmit(", FS:INACTIVE");
+        }
+        fg_cmdlin_uart->transmit_linesep();
+        HAL_Delay(100);
+    }
+
+}
+
 
 /****************************************
  * メイン関数
@@ -125,14 +153,17 @@ void user_main(void){
     std::map<const char *, cmd_func_t> cmd_list{
         {"echo", cmd_print_cmdline_args},
         {"o_tri", cmd_triangle},
-        {"enc", cmd_display_encoder}
+        {"enc", cmd_display_encoder},
+        {"sbus", cmd_display_sbus}
     };
 
     CmdlineUart cmdline_uart(&huart2);
+    SbusUart sbus_uart(&huart1);
     DoubleControlledPwm pwm_output(&htim3, false);
     Tim1Encoder tim1_encoder(&htim1);
 
     g_uart_comm = &cmdline_uart;
+    g_sbus_uart = &sbus_uart;
     fg_cmdlin_uart = &cmdline_uart;
     g_pwm_output = &pwm_output;
     g_tim1_encoder = &tim1_encoder;
@@ -147,6 +178,8 @@ void user_main(void){
 
     led_red_set();
     led_blue_reset();
+
+    sbus_uart.enable_it();
 
     g_tim1_encoder->start();
     pwm_output_disable();

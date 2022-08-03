@@ -160,6 +160,40 @@ private:
     void callback(uint16_t data, size_t len, uint32_t error_flag);
 };
 
+
+class SbusUart : public UartComm{
+public:
+    constexpr static uint8_t STARTBYTE = 0x0f;
+    constexpr static uint8_t ENDBYTE = 0x00;
+    constexpr static uint16_t ERR_STOP = 64;
+    constexpr static uint16_t ERR_CRITICAL = 256;
+    constexpr static uint8_t FAILSAFE_INACTIVE = 0;
+    constexpr static uint8_t FAILSAFE_ACTIVE = 1;
+
+    SbusUart(UART_HandleTypeDef *huart);
+
+    int16_t get_channel(int channel);
+    uint16_t get_decoder_err();
+    int16_t get_fail_safe();
+    int16_t get_lost_frames();
+    uint16_t get_error_rate();
+    bool is_active();
+
+private:
+    uint16_t decoderErrorFrames = 0;
+    int16_t channels[18] = {0};
+    int16_t failsafe = 0;
+    int16_t lostFrames = 0;
+    uint8_t buf_count = 0;
+    uint8_t buffer[25];
+
+    uint16_t error_rate = 128;
+
+    void callback(uint16_t data, size_t len, uint32_t error_flag);
+    void error_reset();
+    void error();
+};
+
 #ifdef __cplusplus
 }
 #endif

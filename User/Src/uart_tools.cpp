@@ -167,3 +167,97 @@ int CmdlineUart::get_commands(args_t *args){
         }
     }
 }
+
+
+SbusUart::SbusUart(UART_HandleTypeDef *huart) : UartComm(huart){
+    for(int i = 0; i < 18; i++) this->channels[i];
+}
+
+int16_t SbusUart::get_channel(int channel){
+    if (channel < 1 or channel > 18) {
+        return 0;
+    } else {
+        return this->channels[channel - 1] - 1024;
+    }
+}
+uint16_t SbusUart::get_decoder_err(){
+    return this->decoderErrorFrames;
+}
+int16_t SbusUart::get_fail_safe(){
+    return this->failsafe;
+}
+int16_t SbusUart::get_lost_frames(){
+    return this->lostFrames;
+}
+uint16_t SbusUart::get_error_rate(){
+    return this->error_rate;
+}
+bool SbusUart::is_active(){
+    if(this->error_rate < this->ERR_STOP){
+        return true;
+    }else{
+        return false;
+    }
+}
+void SbusUart::error_reset(){
+    this->error_rate = 0;
+}
+void SbusUart::error(){
+    if(this->error_rate < this->ERR_CRITICAL){
+        this->error_rate++;
+    }
+}
+void SbusUart::callback(uint16_t data, size_t len, uint32_t error_flag){
+    if(this->buf_count == 0 && data != STARTBYTE){
+        // incorrect start byte, out of sync
+        this->decoderErrorFrames++;
+        this->error();
+        return;
+    }
+
+    this->buffer[this->buf_count] = data;
+    this->buf_count++;
+
+    if(this->buf_count == 25){
+        this->buf_count = 0;
+
+        if(this->buffer[23] != this->ENDBYTE){
+            this->decoderErrorFrames++;
+            this->error();
+            return;
+        }
+
+        this->channels[0]  = ((this->buffer[1]    |this->buffer[2]<<8)                 & 0x07FF);
+        this->channels[1]  = ((this->buffer[2]>>3 |this->buffer[3]<<5)                 & 0x07FF);
+        this->channels[2]  = ((this->buffer[3]>>6 |this->buffer[4]<<2 |this->buffer[5]<<10)  & 0x07FF);
+        this->channels[3]  = ((this->buffer[5]>>1 |this->buffer[6]<<7)                 & 0x07FF);
+        this->channels[4]  = ((this->buffer[6]>>4 |this->buffer[7]<<4)                 & 0x07FF);
+        this->channels[5]  = ((this->buffer[7]>>7 |this->buffer[8]<<1 |this->buffer[9]<<9)   & 0x07FF);
+        this->channels[6]  = ((this->buffer[9]>>2 |this->buffer[10]<<6)                & 0x07FF);
+        this->channels[7]  = ((this->buffer[10]>>5|this->buffer[11]<<3)                & 0x07FF);
+        this->channels[8]  = ((this->buffer[12]   |this->buffer[13]<<8)                & 0x07FF);
+        this->channels[9]  = ((this->buffer[13]>>3|this->buffer[14]<<5)                & 0x07FF);
+        this->channels[10] = ((this->buffer[14]>>6|this->buffer[15]<<2|this->buffer[16]<<10) & 0x07FF);
+        this->channels[11] = ((this->buffer[16]>>1|this->buffer[17]<<7)                & 0x07FF);
+        this->channels[12] = ((this->buffer[17]>>4|this->buffer[18]<<4)                & 0x07FF);
+        this->channels[13] = ((this->buffer[18]>>7|this->buffer[19]<<1|this->buffer[20]<<9)  & 0x07FF);
+        this->channels[14] = ((this->buffer[20]>>2|this->buffer[21]<<6)                & 0x07FF);
+        this->channels[15] = ((this->buffer[21]>>5|this->buffer[22]<<3)                & 0x07FF);
+
+        ((this->buffer[23])      & 0x0001) ? this->channels[16] = 2047: this->channels[16] = 0;
+        ((this->buffer[23] >> 1) & 0x0001) ? this->channels[17] = 2047: this->channels[17] = 0;
+
+        if((this->buffer[23] >> 3) & 0x0001){
+            this->failsafe = this->FAILSAFE_ACTIVE;
+        }else{
+            this->failsafe = this->FAILSAFE_INACTIVE;
+        }
+
+        if ((this->buffer[23] >> 2) & 0x0001) {
+            this->lostFrames++;
+        }
+
+        this->error_reset();
+
+    }
+}

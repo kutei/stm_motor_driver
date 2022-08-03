@@ -13,6 +13,7 @@ extern "C" {
 #endif
 
 
+void USER_USART1_IRQHandler(void);
 void USER_USART2_IRQHandler(void);
 
 
