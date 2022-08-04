@@ -170,7 +170,7 @@ int CmdlineUart::get_commands(args_t *args){
 
 
 SbusUart::SbusUart(UART_HandleTypeDef *huart) : UartComm(huart){
-    for(int i = 0; i < 18; i++) this->channels[i];
+    for(int i = 0; i < 18; i++) this->channels[i] = 0;
 }
 
 int16_t SbusUart::get_channel(int channel){
