@@ -15,7 +15,7 @@ extern "C" {
 
 void USER_USART1_IRQHandler(void);
 void USER_USART2_IRQHandler(void);
-
+void USER_TIM4_IRQHandler(void);
 
 #ifdef __cplusplus
 }

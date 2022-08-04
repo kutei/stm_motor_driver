@@ -15,3 +15,7 @@ void USER_USART1_IRQHandler(void){
 void USER_USART2_IRQHandler(void){
     g_uart_comm->handle_irq();
 }
+
+void USER_TIM4_IRQHandler(void){
+    g_pid_controller->callback();
+}

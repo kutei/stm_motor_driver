@@ -8,7 +8,9 @@
 #include "global_variables.h"
 
 bool g_kill_signal = false;
+bool g_control_active = false;
 UartComm *g_uart_comm;
 DoubleControlledPwm *g_pwm_output;
 Tim1Encoder *g_tim1_encoder;
 SbusUart *g_sbus_uart;
+PidController *g_pid_controller;

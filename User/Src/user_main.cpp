@@ -27,6 +27,19 @@ void args_to_argv(char** argv, args_t* args){
     }
 }
 
+void enable_output(void){
+    led_red_reset();
+    led_blue_set();
+    g_pwm_output->set(0);
+    pwm_output_enable();
+}
+
+void disable_output(void){
+    pwm_output_disable();
+    g_pwm_output->set(0);
+    led_red_set();
+    led_blue_reset();
+}
 
 /****************************************
  * コマンド実行関数郡
@@ -81,17 +94,11 @@ void cmd_triangle(int argc, char** argv){
     }
     int max = atoi(argv[1]);
 
-    led_red_reset();
-    led_blue_set();
-    g_pwm_output->set(0);
-    pwm_output_enable();
+    enable_output();
 
     rotation_triangle(max);
 
-    pwm_output_disable();
-    g_pwm_output->set(0);
-    led_red_set();
-    led_blue_reset();
+    disable_output();
 
     g_kill_signal = false;
 }
@@ -103,14 +110,12 @@ void cmd_display_encoder(int argc, char** argv){
             return;
         }
 
-        g_tim1_encoder->update();
         fg_cmdlin_uart->printf(
             "deg:%d, CNT:%d, spd:%d",
             g_tim1_encoder->get_current(), TIM1->CNT, g_tim1_encoder->get_speed());
         fg_cmdlin_uart->transmit_linesep();
         HAL_Delay(100);
     }
-
 }
 
 void cmd_display_sbus(int argc, char** argv){
@@ -138,7 +143,41 @@ void cmd_display_sbus(int argc, char** argv){
         fg_cmdlin_uart->transmit_linesep();
         HAL_Delay(100);
     }
+}
 
+void cmd_display_pid(int argc, char** argv){
+    while(1){
+        if(g_kill_signal){
+            g_kill_signal = false;
+            return;
+        }
+
+        g_pid_controller->display();
+        fg_cmdlin_uart->transmit_linesep();
+        HAL_Delay(100);
+    }
+}
+
+void cmd_display_pid_full(int argc, char** argv){
+    while(1){
+        if(g_kill_signal){
+            g_kill_signal = false;
+            return;
+        }
+
+        g_pid_controller->display_full();
+        fg_cmdlin_uart->transmit_linesep();
+        HAL_Delay(100);
+    }
+}
+
+void cmd_activate(int argc, char** argv){
+    enable_output();
+    g_control_active = true;
+}
+void cmd_stop(int argc, char** argv){
+    disable_output();
+    g_control_active = false;
 }
 
 
@@ -154,19 +193,25 @@ void user_main(void){
         {"echo", cmd_print_cmdline_args},
         {"o_tri", cmd_triangle},
         {"enc", cmd_display_encoder},
-        {"sbus", cmd_display_sbus}
+        {"sbus", cmd_display_sbus},
+        {"pid", cmd_display_pid},
+        {"pid_full", cmd_display_pid_full},
+        {"activate", cmd_activate},
+        {"stop", cmd_stop}
     };
 
     CmdlineUart cmdline_uart(&huart2);
     SbusUart sbus_uart(&huart1);
     DoubleControlledPwm pwm_output(&htim3, false);
     Tim1Encoder tim1_encoder(&htim1);
+    PidController pid_controller(14.5f, 0.9f, 0.2f, 0.005f, 10, 53000, -26000);
 
     g_uart_comm = &cmdline_uart;
     g_sbus_uart = &sbus_uart;
     fg_cmdlin_uart = &cmdline_uart;
     g_pwm_output = &pwm_output;
     g_tim1_encoder = &tim1_encoder;
+    g_pid_controller = &pid_controller;
     args_to_argv(argv, &args);
 
     cmdline_uart.transmit("\e[5B\e[2J\e[0;0H");  // 5行下、画面全クリア、カーソル位置(0,0)
@@ -176,15 +221,16 @@ void user_main(void){
     cmdline_uart.transmit("$ ");
     cmdline_uart.enable_it();
 
-    led_red_set();
-    led_blue_reset();
+    // 出力を停止
+    disable_output();
 
+    // 各機能を初期化
     sbus_uart.enable_it();
-
     g_tim1_encoder->start();
-    pwm_output_disable();
     pwm_output.start();
-    pwm_output.set(0);
+
+    // 制御割り込みの開始
+    HAL_TIM_Base_Start_IT(&htim4);
 
     while(1){
         if(cmdline_uart.is_execute_requested()){
