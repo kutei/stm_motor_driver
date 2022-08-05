@@ -57,30 +57,32 @@ void rotation_triangle(int max){
     if(max > DoubleControlledPwm::MAX_PERIOD){ max = DoubleControlledPwm::MAX_PERIOD; }
     if(max < 0){ max = 0; }
 
+    float div_max = static_cast<float>(max) / DoubleControlledPwm::MAX_PERIOD;
+
     fg_cmdlin_uart->transmit("start foward rotation");
     for(int i = 0; i < DoubleControlledPwm::MAX_PERIOD; i++){
         if(g_kill_signal) return;
-        g_pwm_output->set(i * max / DoubleControlledPwm::MAX_PERIOD);
+        g_pwm_output->set(i * div_max);
         for(uint32_t j = 0; j < sleep_time; j++) asm("NOP");
     }
     fg_cmdlin_uart->transmit(" - TOP");
     fg_cmdlin_uart->transmit_linesep();
     for(int i = DoubleControlledPwm::MAX_PERIOD; i > 0; i--){
         if(g_kill_signal) return;
-        g_pwm_output->set(i * max / DoubleControlledPwm::MAX_PERIOD);
+        g_pwm_output->set(i * div_max);
         for(uint32_t j = 0; j < sleep_time; j++) asm("NOP");
     }
     fg_cmdlin_uart->transmit("start backward rotation");
     for(int i = 0; i < DoubleControlledPwm::MAX_PERIOD; i++){
         if(g_kill_signal) return;
-        g_pwm_output->set(-i * max / DoubleControlledPwm::MAX_PERIOD);
+        g_pwm_output->set(-i * div_max);
         for(uint32_t j = 0; j < sleep_time; j++) asm("NOP");
     }
     fg_cmdlin_uart->transmit(" - TOP");
     fg_cmdlin_uart->transmit_linesep();
     for(int i = DoubleControlledPwm::MAX_PERIOD; i > 0; i--){
         if(g_kill_signal) return;
-        g_pwm_output->set(-i * max / DoubleControlledPwm::MAX_PERIOD);
+        g_pwm_output->set(-i * div_max);
         for(uint32_t j = 0; j < sleep_time; j++) asm("NOP");
     }
     fg_cmdlin_uart->transmit("finish");
