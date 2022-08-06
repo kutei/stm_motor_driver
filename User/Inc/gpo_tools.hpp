@@ -31,12 +31,14 @@ public:
     constexpr static int32_t MAX_PERIOD = 65207;
 
     DoubleControlledPwm(TIM_HandleTypeDef *tim, bool reverse);
+    DoubleControlledPwm(TIM_HandleTypeDef *tim, bool reverse, int32_t software_max);
     void start(void);
     void set(int32_t out);
 
 private:
     TIM_HandleTypeDef *_tim;
     bool _direction;
+    int32_t _software_max;
 };
 
 

@@ -31,9 +31,17 @@ void pwm_output_disable(void){
 }
 
 
-DoubleControlledPwm::DoubleControlledPwm(TIM_HandleTypeDef *tim, bool reverse){
+DoubleControlledPwm::DoubleControlledPwm(TIM_HandleTypeDef *tim, bool reverse)
+    : DoubleControlledPwm::DoubleControlledPwm(tim, reverse, DoubleControlledPwm::MAX_PERIOD) {}
+
+DoubleControlledPwm::DoubleControlledPwm(TIM_HandleTypeDef *tim, bool reverse, int32_t software_max){
     this->_tim = tim;
     this->_direction = reverse;
+    if(software_max < DoubleControlledPwm::MAX_PERIOD){
+        this->_software_max = software_max;
+    }else{
+        this->_software_max = DoubleControlledPwm::MAX_PERIOD;
+    }
 }
 
 void DoubleControlledPwm::start(void){
@@ -44,7 +52,7 @@ void DoubleControlledPwm::start(void){
 void DoubleControlledPwm::set(int32_t out){
     int32_t abs = out;
     if(abs < 0){ abs *= -1; }
-    if(abs > this->MAX_PERIOD){ abs = this->MAX_PERIOD; }
+    if(abs > this->_software_max){ abs = this->_software_max; }
 
     if(this->_direction){ out *= -1; }
     if(out == 0){
