@@ -46,7 +46,7 @@ void PidController::callback(){
     int32_t output = 0;
     if(g_control_active){
         if(g_sbus_uart->is_active()){
-            int32_t input = g_sbus_uart->get_channel(1) * 70;
+            int32_t input = g_sbus_uart->get_channel(1) * 10;
             this->set_target(input);
             this->step(g_tim1_encoder->get_current());
             output = this->get_out();
@@ -77,7 +77,7 @@ void PidController::display_full(){
         this->get_in(),
         this->get_out(),
         this->get_error(),
-        (uint32_t)(this->get_integral())
+        (int32_t)(this->get_integral())
     );
 }
 
