@@ -234,6 +234,22 @@ void user_main(void){
     // 制御割り込みの開始
     HAL_TIM_Base_Start_IT(&htim4);
 
+
+    // 初期起動シーケンスの開始
+    for(int i = 0; ; i++){
+        HAL_Delay(500); led_blue_set();
+        HAL_Delay(500); led_blue_reset();
+        if(i > 5 && g_sbus_uart->is_active()) break;
+    }
+    led_red_reset();
+    HAL_Delay(500);
+
+    // 制御を開始
+    enable_output();
+    g_control_active = true;
+
+
+    // ここからメインループ
     while(1){
         if(cmdline_uart.is_execute_requested()){
             int argc = cmdline_uart.get_commands(&args);
