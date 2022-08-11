@@ -220,7 +220,7 @@ void user_main(void){
     cmdline_uart.transmit("########################################\n\r");
     cmdline_uart.transmit("#     command line tools started!!     #\n\r");
     cmdline_uart.transmit("########################################\n\r");
-    cmdline_uart.transmit("$ ");
+    cmdline_uart.transmit("start initialize sequence (Press Ctrl+C to skip)\n\r");
     cmdline_uart.enable_it();
 
     // 出力を停止
@@ -239,17 +239,27 @@ void user_main(void){
     for(int i = 0; ; i++){
         HAL_Delay(500); led_blue_set();
         HAL_Delay(500); led_blue_reset();
-        if(i > 5 && g_sbus_uart->is_active()) break;
+        if(i > 5 && g_sbus_uart->is_active()){
+            led_red_reset();
+            HAL_Delay(500);
+
+            // 制御を開始
+            cmdline_uart.transmit("start position control");
+            cmdline_uart.transmit_linesep();
+            enable_output();
+            g_control_active = true;
+
+            break;
+        }
+        if(g_kill_signal){
+            g_kill_signal = false;
+            cmdline_uart.transmit_linesep();
+            break;
+        }
     }
-    led_red_reset();
-    HAL_Delay(500);
-
-    // 制御を開始
-    enable_output();
-    g_control_active = true;
-
 
     // ここからメインループ
+    cmdline_uart.transmit("$ ");
     while(1){
         if(cmdline_uart.is_execute_requested()){
             int argc = cmdline_uart.get_commands(&args);
@@ -264,7 +274,8 @@ void user_main(void){
                     }
                 }
                 if(executed == false){
-                    cmdline_uart.printf("error: unknown cmd for %s\n\r", argv[0]);
+                    cmdline_uart.printf("error: unknown cmd for %s", argv[0]);
+                    cmdline_uart.transmit_linesep();
                 }
             }
             cmdline_uart.transmit("$ ");
