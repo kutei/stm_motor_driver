@@ -10,6 +10,11 @@
 
 Tim1Encoder::Tim1Encoder(TIM_HandleTypeDef *htim){
     this->htim = htim;
+    this->reset_position();
+}
+
+void Tim1Encoder::reset_position(){
+    this->htim->Instance->CNT = 0;
     this->spd = 0;
     this->curr_fine = 0;
     this->curr_coarse = 0;

@@ -10,6 +10,7 @@
 
 #define ARGS_NUM 10
 #define ARG_LENGTH 20
+#define RESET_SPEED 3000
 
 #include <array>
 

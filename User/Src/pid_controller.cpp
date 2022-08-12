@@ -51,8 +51,8 @@ void PidController::callback(){
             this->step(g_tim1_encoder->get_current());
             output = this->get_out();
         }
+        g_pwm_output->set(output);
     }
-    g_pwm_output->set(output);
 }
 
 float PidController::get_integral(void){

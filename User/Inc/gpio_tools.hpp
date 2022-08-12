@@ -5,8 +5,8 @@
  *      Author: yumas
  */
 
-#ifndef INC_GPO_TOOLS_HPP_
-#define INC_GPO_TOOLS_HPP_
+#ifndef INC_GPIO_TOOLS_HPP_
+#define INC_GPIO_TOOLS_HPP_
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,6 +23,8 @@ void led_blue_set(void);
 
 void pwm_output_enable(void);
 void pwm_output_disable(void);
+
+uint8_t limit_center(void);
 
 class DoubleControlledPwm{
 public:
@@ -46,4 +48,4 @@ private:
 }
 #endif
 
-#endif /* INC_GPO_TOOLS_HPP_ */
+#endif /* INC_GPIO_TOOLS_HPP_ */

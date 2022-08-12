@@ -11,7 +11,7 @@
 #include "stm32f1xx.h"
 #include "uart_tools.hpp"
 #include "tim1_encoder.hpp"
-#include "gpo_tools.hpp"
+#include "gpio_tools.hpp"
 #include "pid_controller.hpp"
 
 

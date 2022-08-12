@@ -19,6 +19,7 @@ public:
     constexpr static int32_t PERIOD = 65535;
     constexpr static int32_t OF_UF_THRESHOLD = 32767;
     Tim1Encoder(TIM_HandleTypeDef *htim);
+    void reset_position(void);
     void start(void);
     void update(void);
     int32_t get_current(void);

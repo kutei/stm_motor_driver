@@ -6,7 +6,7 @@
  */
 
 #include "uart_tools.hpp"
-#include "gpo_tools.hpp"
+#include "gpio_tools.hpp"
 #include "tim1_encoder.hpp"
 #include "user_main.hpp"
 #include "constants.hpp"
@@ -40,6 +40,31 @@ void disable_output(void){
     led_red_set();
     led_blue_reset();
 }
+
+bool reset_position(void){
+    uint8_t before = limit_center();
+    int32_t reset_spd = RESET_SPEED;
+
+    if(before == 1){ reset_spd *= -1; }
+    g_uart_comm->printf("reset rotation: %d", reset_spd);
+    g_uart_comm->transmit_linesep();
+    g_pwm_output->set(reset_spd);
+
+    while(true){
+        if(g_kill_signal){
+            g_kill_signal = false;
+            g_pwm_output->set(0);
+            return false;
+        }
+        if(limit_center() != before){
+            break;
+        }
+    }
+    g_pwm_output->set(0);
+    g_tim1_encoder->reset_position();
+    return true;
+}
+
 
 /****************************************
  * コマンド実行関数郡
@@ -120,6 +145,23 @@ void cmd_display_encoder(int argc, char** argv){
     }
 }
 
+void cmd_display_switch(int argc, char** argv){
+    while(1){
+        if(g_kill_signal){
+            g_kill_signal = false;
+            return;
+        }
+
+        if(limit_center() == 0){
+            fg_cmdlin_uart->transmit("CENTER: ON ");
+        }else{
+            fg_cmdlin_uart->transmit("CENTER: OFF");
+        }
+        fg_cmdlin_uart->transmit_linesep();
+        HAL_Delay(100);
+    }
+}
+
 void cmd_display_sbus(int argc, char** argv){
     while(1){
         if(g_kill_signal){
@@ -156,7 +198,7 @@ void cmd_display_pid(int argc, char** argv){
 
         g_pid_controller->display();
         fg_cmdlin_uart->transmit_linesep();
-        HAL_Delay(100);
+        HAL_Delay(10);
     }
 }
 
@@ -182,6 +224,12 @@ void cmd_stop(int argc, char** argv){
     g_control_active = false;
 }
 
+void cmd_reset_position(int argc, char** argv){
+    enable_output();
+    reset_position();
+    disable_output();
+}
+
 
 /****************************************
  * メイン関数
@@ -197,9 +245,11 @@ void user_main(void){
         {"enc", cmd_display_encoder},
         {"sbus", cmd_display_sbus},
         {"pid", cmd_display_pid},
+        {"sw", cmd_display_switch},
         {"pid_full", cmd_display_pid_full},
         {"activate", cmd_activate},
-        {"stop", cmd_stop}
+        {"stop", cmd_stop},
+        {"reset_position", cmd_reset_position}
     };
 
     CmdlineUart cmdline_uart(&huart2);
@@ -243,11 +293,19 @@ void user_main(void){
             led_red_reset();
             HAL_Delay(500);
 
-            // 制御を開始
-            cmdline_uart.transmit("start position control");
+            // 位置リセット
+            cmdline_uart.transmit("reset position");
             cmdline_uart.transmit_linesep();
             enable_output();
-            g_control_active = true;
+            bool ret = reset_position();
+            if(ret == true){
+                // 制御を開始
+                cmdline_uart.transmit("start position control");
+                cmdline_uart.transmit_linesep();
+                g_control_active = true;
+            }else{
+                disable_output();
+            }
 
             break;
         }

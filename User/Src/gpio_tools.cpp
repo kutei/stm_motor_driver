@@ -5,7 +5,7 @@
  *      Author: yumas
  */
 
-#include "gpo_tools.hpp"
+#include "gpio_tools.hpp"
 #include "stm32f1xx_hal.h"
 
 
@@ -30,6 +30,13 @@ void pwm_output_disable(void){
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
 }
 
+uint8_t limit_center(void){
+    if( (GPIOA->IDR & GPIO_PIN_1) != (uint32_t)0 ){
+        return 1;
+    }else{
+        return 0;
+    }
+}
 
 DoubleControlledPwm::DoubleControlledPwm(TIM_HandleTypeDef *tim, bool reverse)
     : DoubleControlledPwm::DoubleControlledPwm(tim, reverse, DoubleControlledPwm::MAX_PERIOD) {}
