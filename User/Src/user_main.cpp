@@ -256,7 +256,7 @@ void user_main(void){
     SbusUart sbus_uart(&huart1);
     DoubleControlledPwm pwm_output(&htim3, false, 40000);
     Tim1Encoder tim1_encoder(&htim1);
-    PidController pid_controller(14.5f, 0.9f, 0.5f, 0.005f, 8, 10000, -10000);
+    PidController pid_controller(90.0f, 0.9f, 0.9f, 0.005f, 8, 10000, -10000);
 
     g_uart_comm = &cmdline_uart;
     g_sbus_uart = &sbus_uart;
