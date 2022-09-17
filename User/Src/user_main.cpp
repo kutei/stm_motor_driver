@@ -287,11 +287,11 @@ void user_main(void){
 
     // 初期起動シーケンスの開始
     for(int i = 0; ; i++){
-        HAL_Delay(500); led_blue_set();
-        HAL_Delay(500); led_blue_reset();
+        HAL_Delay(250); led_blue_set();
+        HAL_Delay(250); led_blue_reset();
         if(i > 5 && g_sbus_uart->is_active()){
             led_red_reset();
-            HAL_Delay(500);
+            HAL_Delay(250);
 
             // 位置リセット
             cmdline_uart.transmit("reset position");
