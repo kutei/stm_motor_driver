@@ -13,11 +13,12 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <cstddef>
+
+#define MOVING_AVERAGE_LEN 10
 
 class PidController{
 public:
-    constexpr static uint16_t DENOMINATOR = 13; // 2^13 =  8192
-
     PidController(float Kp, float Ki, float Kd, float dt, int32_t max_integral, int32_t max_target, int32_t min_target);
 
     void reset();
@@ -47,6 +48,9 @@ private:
     int32_t _min_target;
     int32_t _out = 0;
     int32_t _in = 0;
+
+    int32_t mov_avg_que[MOVING_AVERAGE_LEN] = {0};
+    std::size_t mov_avg_que_idx = 0;
 
     int32_t step(int32_t in);
 };

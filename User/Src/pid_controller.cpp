@@ -86,8 +86,18 @@ void PidController::display(){
 }
 
 int32_t PidController::step(int32_t in){
+    // targetを移動平均で平滑化
+    this->mov_avg_que[this->mov_avg_que_idx] = this->_target;
+    this->mov_avg_que_idx++;
+    if(this->mov_avg_que_idx >= MOVING_AVERAGE_LEN){
+        this->mov_avg_que_idx = 0;
+    }
+    int64_t sum = 0;
+    for(size_t i = 0; i < MOVING_AVERAGE_LEN; i++) sum += this->mov_avg_que[i];
+    int32_t target = sum / MOVING_AVERAGE_LEN;
+
     // 偏差と積分値の計算
-    int32_t err = this->_target - in;
+    int32_t err = target - in;
     this->_integral += err * this->_dt;
     if(this->_integral >  this->_max_integral) this->_integral =  this->_max_integral;
     if(this->_integral < -this->_max_integral) this->_integral = -this->_max_integral;
