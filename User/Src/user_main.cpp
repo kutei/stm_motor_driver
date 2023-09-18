@@ -326,10 +326,13 @@ void user_main(void){
                 bool executed = false;
                 if(strcmp(argv[0], "?") == 0){
                     // 特殊コマンド: コマンドリストの表示
-                    cmdline_uart.printf("==== Command List ====");cmdline_uart.transmit_linesep();
+                    cmdline_uart.printf("==== Command List ====");
+                    cmdline_uart.transmit_linesep();
                     for(auto it = cmd_list.cbegin(); it != cmd_list.cend() ; it++){
-                        cmdline_uart.printf("  %s", it->first); cmdline_uart.transmit_linesep();
+                        cmdline_uart.printf("  %s", it->first);
+                        cmdline_uart.transmit_linesep();
                     }
+                    executed = true;
                 }else{
                     // 通常コマンドの検索と実行
                     for(auto it = cmd_list.cbegin(); it != cmd_list.cend() ; it++){
@@ -339,10 +342,10 @@ void user_main(void){
                             break;
                         }
                     }
-                    if(executed == false){
-                        cmdline_uart.printf("error: unknown cmd for %s", argv[0]);
-                        cmdline_uart.transmit_linesep();
-                    }
+                }
+                if(executed == false){
+                    cmdline_uart.printf("error: unknown cmd for %s", argv[0]);
+                    cmdline_uart.transmit_linesep();
                 }
             }
             cmdline_uart.transmit("$ ");
