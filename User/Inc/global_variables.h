@@ -16,6 +16,7 @@
 
 
 // CubeMX defined variables
+extern ADC_HandleTypeDef hadc1;
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
@@ -26,6 +27,9 @@ extern UART_HandleTypeDef huart2;
 // user defined variables
 extern bool g_kill_signal;
 extern bool g_control_active;
+
+extern uint32_t g_adc_current;
+
 extern UartComm *g_uart_comm;
 extern DoubleControlledPwm *g_pwm_output;
 extern Tim1Encoder *g_tim1_encoder;

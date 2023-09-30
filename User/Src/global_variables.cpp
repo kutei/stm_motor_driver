@@ -9,6 +9,9 @@
 
 bool g_kill_signal = false;
 bool g_control_active = false;
+
+uint32_t g_adc_current = 0;
+
 UartComm *g_uart_comm;
 DoubleControlledPwm *g_pwm_output;
 Tim1Encoder *g_tim1_encoder;

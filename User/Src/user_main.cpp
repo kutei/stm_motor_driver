@@ -7,6 +7,7 @@
 
 #include "uart_tools.hpp"
 #include "gpio_tools.hpp"
+#include "adc_controller.hpp"
 #include "tim1_encoder.hpp"
 #include "user_main.hpp"
 #include "constants.hpp"
@@ -77,7 +78,7 @@ void cmd_print_cmdline_args(int argc, char** argv){
 }
 
 void rotation_triangle(int max){
-    uint32_t sleep_time = 500;
+    uint32_t sleep_time = 300;
 
     if(max > DoubleControlledPwm::MAX_PERIOD){ max = DoubleControlledPwm::MAX_PERIOD; }
     if(max < 0){ max = 0; }
@@ -88,6 +89,14 @@ void rotation_triangle(int max){
     for(int i = 0; i < DoubleControlledPwm::MAX_PERIOD; i++){
         if(g_kill_signal) return;
         g_pwm_output->set(i * div_max);
+
+        // disp current
+        if (i % 10000 == 0){
+	    fg_cmdlin_uart->printf("ADC: %d", get_adc_data(hadc1));
+	    fg_cmdlin_uart->transmit_linesep();
+        }
+
+	// wait
         for(uint32_t j = 0; j < sleep_time; j++) asm("NOP");
     }
     fg_cmdlin_uart->transmit(" - TOP");
@@ -95,12 +104,28 @@ void rotation_triangle(int max){
     for(int i = DoubleControlledPwm::MAX_PERIOD; i > 0; i--){
         if(g_kill_signal) return;
         g_pwm_output->set(i * div_max);
+
+        // disp current
+        if (i % 10000 == 0){
+	    fg_cmdlin_uart->printf("ADC: %d", get_adc_data(hadc1));
+	    fg_cmdlin_uart->transmit_linesep();
+        }
+
+	// wait
         for(uint32_t j = 0; j < sleep_time; j++) asm("NOP");
     }
     fg_cmdlin_uart->transmit("start backward rotation");
     for(int i = 0; i < DoubleControlledPwm::MAX_PERIOD; i++){
         if(g_kill_signal) return;
         g_pwm_output->set(-i * div_max);
+
+        // disp current
+        if (i % 10000 == 0){
+	    fg_cmdlin_uart->printf("ADC: %d", get_adc_data(hadc1));
+	    fg_cmdlin_uart->transmit_linesep();
+        }
+
+	// wait
         for(uint32_t j = 0; j < sleep_time; j++) asm("NOP");
     }
     fg_cmdlin_uart->transmit(" - TOP");
@@ -108,6 +133,14 @@ void rotation_triangle(int max){
     for(int i = DoubleControlledPwm::MAX_PERIOD; i > 0; i--){
         if(g_kill_signal) return;
         g_pwm_output->set(-i * div_max);
+
+        // disp current
+        if (i % 10000 == 0){
+	    fg_cmdlin_uart->printf("ADC: %d", get_adc_data(hadc1));
+	    fg_cmdlin_uart->transmit_linesep();
+        }
+
+	// wait
         for(uint32_t j = 0; j < sleep_time; j++) asm("NOP");
     }
     fg_cmdlin_uart->transmit("finish");
@@ -230,6 +263,19 @@ void cmd_reset_position(int argc, char** argv){
     disable_output();
 }
 
+void cmd_check_adc(int argc, char** argv){
+    while(1){
+         if(g_kill_signal){
+             g_kill_signal = false;
+             return;
+         }
+
+        fg_cmdlin_uart->printf("ADC: %d", get_adc_data(hadc1));
+        fg_cmdlin_uart->transmit_linesep();
+        HAL_Delay(10);
+    }
+}
+
 
 /****************************************
  * メイン関数
@@ -249,12 +295,13 @@ void user_main(void){
         {"pid_full", cmd_display_pid_full},
         {"activate", cmd_activate},
         {"stop", cmd_stop},
-        {"reset_position", cmd_reset_position}
+        {"reset_position", cmd_reset_position},
+        {"check_adc", cmd_check_adc},
     };
 
     CmdlineUart cmdline_uart(&huart2);
     SbusUart sbus_uart(&huart1);
-    DoubleControlledPwm pwm_output(&htim3, false, 60000);
+    DoubleControlledPwm pwm_output(&htim3, false, 40000);
     Tim1Encoder tim1_encoder(&htim1);
     PidController pid_controller(160.0f, 0.9f, 0.9f, 0.005f, 8, 10000, -10000);
 
@@ -280,6 +327,7 @@ void user_main(void){
     sbus_uart.enable_it();
     g_tim1_encoder->start();
     pwm_output.start();
+    adc_control_enable(&htim3, hadc1);
 
     // 制御割り込みの開始
     HAL_TIM_Base_Start_IT(&htim4);

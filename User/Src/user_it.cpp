@@ -19,3 +19,7 @@ void USER_USART2_IRQHandler(void){
 void USER_TIM4_IRQHandler(void){
     g_pid_controller->callback();
 }
+
+void USER_ADC1_2_IRQHandler(void){
+    g_adc_current = ADC1->DR & 0x0000ffff;
+}
