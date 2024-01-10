@@ -19,6 +19,9 @@ extern "C" {
 
 class PidController{
 public:
+    const static int32_t MAX_BLEND = 40;
+    const static int32_t MAX_MASTER_BLEND = 100;
+
     PidController(float Kp, float Ki, float Kd, float dt, int32_t max_integral, int32_t max_target, int32_t min_target);
 
     void reset();
@@ -48,6 +51,9 @@ private:
     int32_t _min_target;
     int32_t _out = 0;
     int32_t _in = 0;
+
+    int32_t _master_blend = 0;
+    int32_t _blend = PidController::MAX_BLEND;
 
     int32_t mov_avg_que[MOVING_AVERAGE_LEN] = {0};
     std::size_t mov_avg_que_idx = 0;

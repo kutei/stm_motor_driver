@@ -46,12 +46,29 @@ void PidController::callback(){
     int32_t output = 0;
     if(g_control_active){
         if(g_sbus_uart->is_active()){
-            int32_t input = g_sbus_uart->get_channel(1) * 10;
-            this->set_target(input);
+            int32_t variable_input = g_sbus_uart->get_channel(1) * 10;
+            int32_t trim_input = g_sbus_uart->get_channel(6) * 10;
+
+            if(g_sbus_uart->get_channel(5) < 440){
+                if(this->_blend > 0) this->_blend--;
+            }else{
+                if(this->_blend < PidController::MAX_BLEND) this->_blend++;
+            }
+
+            int32_t selected_input = 0;
+            selected_input += trim_input * this->_blend / PidController::MAX_BLEND;
+            selected_input += variable_input * (PidController::MAX_BLEND - this->_blend) / PidController::MAX_BLEND;
+
+            if(this->_master_blend < PidController::MAX_MASTER_BLEND) this->_master_blend++;
+            int32_t master_input = selected_input * this->_master_blend / PidController::MAX_MASTER_BLEND;
+
+            this->set_target(master_input);
             this->step(g_tim1_encoder->get_current());
             output = this->get_out();
         }
         g_pwm_output->set(output);
+    }else{
+        this->_master_blend = 0;
     }
 }
 
